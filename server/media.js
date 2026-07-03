@@ -28,11 +28,10 @@ export async function generateMediaHandler(req, res) {
     let result = { type, id: mediaId };
 
     if (type === 'image' || type === 'video') {
-      // 1. Generate Image using Fal.ai (Flux Pro 1.1)
-      const falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
-        input: { prompt, aspect_ratio: "16:9" }
-      });
-      result.imageUrl = falResult.images[0].url;
+      // 1. Generate Image using Pollinations.ai (100% Free, no API key needed!)
+      const safePrompt = encodeURIComponent(prompt);
+      const seed = Math.floor(Math.random() * 100000);
+      result.imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1280&height=720&nologo=true&seed=${seed}`;
     }
     
     if (type === 'voice' || type === 'video') {
