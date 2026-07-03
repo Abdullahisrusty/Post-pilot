@@ -28,8 +28,24 @@ export async function generateMediaHandler(req, res) {
     let result = { type, id: mediaId };
 
     if (type === 'image' || type === 'video') {
-      // 1. Generate Image using Pollinations.ai (100% Free, no API key needed!)
-      const safePrompt = encodeURIComponent(prompt);
+      // 1. Enhance the prompt using Groq so Pollinations generates a much better image
+      const Groq = (await import('groq-sdk')).default;
+      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+      
+      const promptEnhancer = await groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: 'You are an expert AI image prompt engineer. The user will give you a rough idea for an ad. Your job is to convert it into a highly detailed, cinematic, photorealistic image prompt. Do NOT include text instructions (like "make an ad"). Just describe the visual scene beautifully in 2-3 sentences. For example: "A sleek modern smartphone floating in a neon green glowing aura, displaying a futuristic AI interface..."' },
+          { role: 'user', content: prompt }
+        ],
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0.7,
+      });
+      
+      const enhancedPrompt = promptEnhancer.choices[0]?.message?.content || prompt;
+      console.log("Enhanced Image Prompt:", enhancedPrompt);
+
+      // 2. Generate Image using Pollinations.ai
+      const safePrompt = encodeURIComponent(enhancedPrompt);
       const seed = Math.floor(Math.random() * 100000);
       result.imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1280&height=720&nologo=true&seed=${seed}`;
     }
