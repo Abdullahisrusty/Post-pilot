@@ -5,7 +5,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs-extra';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import * as googleTTS from 'google-tts-api';
+import { MsEdgeTTS, OUTPUT_FORMAT } from 'msedge-tts';
 import { fileURLToPath } from 'url';
 import os from 'os';
 
@@ -33,10 +33,10 @@ export async function generateMediaHandler(req, res) {
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     
     const directorPrompt = `You are an expert AI Video Ad Director. The user will give you a prompt for an ad.
-Your job is to write a short, punchy voiceover script (under 150 characters, max 2 sentences) and a beautiful cinematic image prompt to match it.
+Your job is to write a highly engaging, punchy voiceover script (around 15 to 20 seconds spoken, approximately 30 to 50 words) and a beautiful cinematic image prompt to match it. Do NOT make the script too short. Make it sound like a real, exciting TikTok/Reel ad.
 Return valid JSON exactly in this format:
 {
-  "script": "Tired of forgetting things? Meet your new WhatsApp AI reminder...",
+  "script": "Are you tired of forgetting important tasks? Stop juggling a dozen apps. Meet your new WhatsApp AI assistant. Just text it a reminder, and it handles the rest. Try it today and supercharge your productivity!",
   "visual": "A sleek modern smartphone floating in a neon green glowing aura, displaying a futuristic AI interface..."
 }`;
     
@@ -66,21 +66,15 @@ Return valid JSON exactly in this format:
     }
     
     if (type === 'voice' || type === 'video') {
-      // 3. Generate Voice using Google TTS
+      // 3. Generate Voice using highly realistic Microsoft Edge TTS (100% Free)
       const textToSpeak = voiceText || aiResponse.script;
       
-      const audioUrl = googleTTS.getAudioUrl(textToSpeak, {
-        lang: 'en',
-        slow: false,
-        host: 'https://translate.google.com',
-      });
-      
-      const elRes = await fetch(audioUrl);
-      if (!elRes.ok) throw new Error('Failed to download audio from Google TTS');
-      
-      const audioBuffer = await elRes.buffer();
+      const tts = new MsEdgeTTS();
+      await tts.setMetadata('en-US-AriaNeural', OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      await tts.toFile(tempDir, textToSpeak);
+      // toFile automatically saves it as audio.mp3 inside tempDir
       const audioPath = path.join(tempDir, 'audio.mp3');
-      await fs.writeFile(audioPath, audioBuffer);
+      
       result.audioUrl = `/api/media/${mediaId}/audio.mp3`;
       
       if (type === 'video') {
