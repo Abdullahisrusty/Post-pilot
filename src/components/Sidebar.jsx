@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { UserButton, useUser } from '@clerk/clerk-react';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -8,7 +8,7 @@ import {
   FileText,
   Clock,
   Settings,
-  LogOut,
+  Link,
   Send,
   ChevronLeft,
   ChevronRight,
@@ -20,6 +20,7 @@ import './Sidebar.css';
 
 const navItems = [
   { to: '/app', icon: LayoutDashboard, label: 'Compose', end: true },
+  { to: '/app/integrations', icon: Link, label: 'Integrations' },
   { to: '/app/community', icon: MessageSquare, label: 'Community' },
   { to: '/app/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/app/calendar', icon: Calendar, label: 'Calendar' },
@@ -29,14 +30,9 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { user } = useUser();
   const [collapsed, setCollapsed] = useState(false);
-
-  const handleSignOut = () => {
-    signOut();
-    navigate('/');
-  };
 
   return (
     <>
@@ -88,19 +84,16 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         )}
 
-        <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="sidebar-avatar">{user?.initials || 'AR'}</div>
-            {!collapsed && (
-              <div className="sidebar-user-info">
-                <span className="sidebar-user-name">{user?.name || 'Alex Rivera'}</span>
-                <span className="sidebar-user-plan">{user?.plan || 'Pro'} Plan</span>
-              </div>
-            )}
-          </div>
-          <button className="sidebar-signout" onClick={handleSignOut} title="Sign out">
-            <LogOut size={18} />
-          </button>
+        <div className="sidebar-footer" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px' }}>
+          <UserButton afterSignOutUrl="/" appearance={{ elements: { userButtonBox: { width: '100%', display: 'flex', justifyContent: 'flex-start' } } }} />
+          {!collapsed && (
+            <div className="sidebar-user-info" style={{ overflow: 'hidden' }}>
+              <span className="sidebar-user-name" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {user?.fullName || user?.primaryEmailAddress?.emailAddress || 'User'}
+              </span>
+              <span className="sidebar-user-plan" style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Pro Plan</span>
+            </div>
+          )}
         </div>
       </aside>
     </>
