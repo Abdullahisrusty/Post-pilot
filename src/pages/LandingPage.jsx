@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import {
   Sparkles,
   Send,
@@ -119,14 +118,12 @@ function useIntersectionObserver(options = {}) {
 
 function LandingPage() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
 
   const featureObserver = useIntersectionObserver();
   const platformObserver = useIntersectionObserver();
   const statObserver = useIntersectionObserver();
 
   const handleGetStarted = () => {
-    signIn();
     navigate('/app');
   };
 
