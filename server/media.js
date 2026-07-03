@@ -28,32 +28,46 @@ export async function generateMediaHandler(req, res) {
     
     let result = { type, id: mediaId };
 
-    if (type === 'image' || type === 'video') {
-      // 1. Enhance the prompt using Groq so Pollinations generates a much better image
-      const Groq = (await import('groq-sdk')).default;
-      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-      
-      const promptEnhancer = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: 'You are an expert AI image prompt engineer. The user will give you a rough idea for an ad. Your job is to convert it into a highly detailed, cinematic, photorealistic image prompt. Do NOT include text instructions (like "make an ad"). Just describe the visual scene beautifully in 2-3 sentences. For example: "A sleek modern smartphone floating in a neon green glowing aura, displaying a futuristic AI interface..."' },
-          { role: 'user', content: prompt }
-        ],
-        model: 'llama-3.3-70b-versatile',
-        temperature: 0.7,
-      });
-      
-      const enhancedPrompt = promptEnhancer.choices[0]?.message?.content || prompt;
-      console.log("Enhanced Image Prompt:", enhancedPrompt);
+    // 1. The AI Director (Groq)
+    const Groq = (await import('groq-sdk')).default;
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    
+    const directorPrompt = `You are an expert AI Video Ad Director. The user will give you a prompt for an ad.
+Your job is to write a short, punchy voiceover script (under 150 characters, max 2 sentences) and a beautiful cinematic image prompt to match it.
+Return valid JSON exactly in this format:
+{
+  "script": "Tired of forgetting things? Meet your new WhatsApp AI reminder...",
+  "visual": "A sleek modern smartphone floating in a neon green glowing aura, displaying a futuristic AI interface..."
+}`;
+    
+    const directorResponse = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: directorPrompt },
+        { role: 'user', content: prompt }
+      ],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+      response_format: { type: 'json_object' }
+    });
+    
+    let aiResponse = { script: prompt, visual: prompt };
+    try {
+      aiResponse = JSON.parse(directorResponse.choices[0]?.message?.content);
+      console.log("AI Director:", aiResponse);
+    } catch (e) {
+      console.error("Failed to parse AI Director JSON");
+    }
 
+    if (type === 'image' || type === 'video') {
       // 2. Generate Image using Pollinations.ai
-      const safePrompt = encodeURIComponent(enhancedPrompt);
+      const safePrompt = encodeURIComponent(aiResponse.visual);
       const seed = Math.floor(Math.random() * 100000);
       result.imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1280&height=720&nologo=true&seed=${seed}`;
     }
     
     if (type === 'voice' || type === 'video') {
-      // 2. Generate Voice using Google TTS (100% Free)
-      const textToSpeak = voiceText || prompt;
+      // 3. Generate Voice using Google TTS
+      const textToSpeak = voiceText || aiResponse.script;
       
       const audioUrl = googleTTS.getAudioUrl(textToSpeak, {
         lang: 'en',
@@ -62,10 +76,7 @@ export async function generateMediaHandler(req, res) {
       });
       
       const elRes = await fetch(audioUrl);
-      
-      if (!elRes.ok) {
-        throw new Error('Failed to download audio from Google TTS');
-      }
+      if (!elRes.ok) throw new Error('Failed to download audio from Google TTS');
       
       const audioBuffer = await elRes.buffer();
       const audioPath = path.join(tempDir, 'audio.mp3');
@@ -73,7 +84,7 @@ export async function generateMediaHandler(req, res) {
       result.audioUrl = `/api/media/${mediaId}/audio.mp3`;
       
       if (type === 'video') {
-        // 3. Combine Image and Audio into a Video
+        // 4. Combine Image and Audio into a Video with Cinematic Motion
         const imageRes = await fetch(result.imageUrl);
         const imageBuffer = await imageRes.buffer();
         const imagePath = path.join(tempDir, 'image.jpg');
@@ -86,9 +97,11 @@ export async function generateMediaHandler(req, res) {
             .input(imagePath)
             .loop(1)
             .input(audioPath)
+            .complexFilter([
+              "zoompan=z='min(zoom+0.0015,1.5)':d=700:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+            ])
             .outputOptions([
               '-c:v libx264',
-              '-tune stillimage',
               '-c:a aac',
               '-b:a 192k',
               '-pix_fmt yuv420p',
