@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
-  Facebook, 
   Link2, 
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { FaTwitter, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa';
 import './Integrations.css';
 
 export default function Integrations() {
@@ -27,28 +24,28 @@ export default function Integrations() {
     {
       id: 'twitter',
       name: 'X (Twitter)',
-      icon: <Twitter size={24} color="#1DA1F2" />,
+      icon: <FaTwitter size={24} color="#1DA1F2" />,
       description: 'Automatically publish threads and tweets to your X timeline.',
       connected: connections.twitter
     },
     {
       id: 'linkedin',
       name: 'LinkedIn',
-      icon: <Linkedin size={24} color="#0A66C2" />,
+      icon: <FaLinkedin size={24} color="#0A66C2" />,
       description: 'Share professional updates and articles to your LinkedIn network.',
       connected: connections.linkedin
     },
     {
       id: 'instagram',
       name: 'Instagram',
-      icon: <Instagram size={24} color="#E1306C" />,
+      icon: <FaInstagram size={24} color="#E1306C" />,
       description: 'Schedule reels, stories, and feed posts directly to Instagram.',
       connected: connections.instagram
     },
     {
       id: 'facebook',
       name: 'Facebook',
-      icon: <Facebook size={24} color="#1877F2" />,
+      icon: <FaFacebook size={24} color="#1877F2" />,
       description: 'Cross-post your content to your Facebook Pages and Groups.',
       connected: connections.facebook
     }
