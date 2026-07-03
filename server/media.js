@@ -1,0 +1,112 @@
+import { fal } from '@fal-ai/client';
+import fetch from 'node-fetch';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import fs from 'fs-extra';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { fileURLToPath } from 'url';
+import os from 'os';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
+export async function generateMediaHandler(req, res) {
+  try {
+    const { prompt, type, voiceText } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required.' });
+    }
+    
+    const mediaId = uuidv4();
+    const tempDir = path.join(os.tmpdir(), 'postpilot-media', mediaId);
+    await fs.ensureDir(tempDir);
+    
+    let result = { type, id: mediaId };
+
+    if (type === 'image' || type === 'video') {
+      // 1. Generate Image using Fal.ai (Flux Pro 1.1)
+      const falResult = await fal.subscribe('fal-ai/flux-pro/v1.1', {
+        input: { prompt, aspect_ratio: "16:9" }
+      });
+      result.imageUrl = falResult.images[0].url;
+    }
+    
+    if (type === 'voice' || type === 'video') {
+      // 2. Generate Voice using ElevenLabs
+      const textToSpeak = voiceText || prompt;
+      // Using a default voice ID (Rachel) - you can make this dynamic later
+      const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
+      
+      const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': process.env.ELEVENLABS_API_KEY
+        },
+        body: JSON.stringify({
+          text: textToSpeak,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: { stability: 0.5, similarity_boost: 0.5 }
+        })
+      });
+      
+      if (!elRes.ok) {
+        throw new Error('Failed to generate voice from ElevenLabs');
+      }
+      
+      const audioBuffer = await elRes.buffer();
+      const audioPath = path.join(tempDir, 'audio.mp3');
+      await fs.writeFile(audioPath, audioBuffer);
+      result.audioUrl = `/api/media/${mediaId}/audio.mp3`;
+      
+      if (type === 'video') {
+        // 3. Combine Image and Audio into a Video
+        const imageRes = await fetch(result.imageUrl);
+        const imageBuffer = await imageRes.buffer();
+        const imagePath = path.join(tempDir, 'image.jpg');
+        await fs.writeFile(imagePath, imageBuffer);
+        
+        const videoPath = path.join(tempDir, 'video.mp4');
+        
+        await new Promise((resolve, reject) => {
+          ffmpeg()
+            .input(imagePath)
+            .loop(1)
+            .input(audioPath)
+            .outputOptions([
+              '-c:v libx264',
+              '-tune stillimage',
+              '-c:a aac',
+              '-b:a 192k',
+              '-pix_fmt yuv420p',
+              '-shortest' // ends the video when the shortest input (audio) ends
+            ])
+            .save(videoPath)
+            .on('end', resolve)
+            .on('error', reject);
+        });
+        
+        result.videoUrl = `/api/media/${mediaId}/video.mp4`;
+      }
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error generating media:', error);
+    res.status(500).json({ error: 'Failed to generate media.' });
+  }
+}
+
+export function serveMediaHandler(req, res) {
+  const { id, file } = req.params;
+  const filePath = path.join(os.tmpdir(), 'postpilot-media', id, file);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('Media not found');
+  }
+}
