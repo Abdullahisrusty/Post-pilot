@@ -70,7 +70,9 @@ export async function generateMediaHandler(req, res) {
       });
       
       if (!elRes.ok) {
-        throw new Error('Failed to generate voice from ElevenLabs');
+        const errText = await elRes.text();
+        console.error("ElevenLabs Error:", errText);
+        throw new Error(`ElevenLabs API Error: ${errText}`);
       }
       
       const audioBuffer = await elRes.buffer();
@@ -112,7 +114,7 @@ export async function generateMediaHandler(req, res) {
     res.json(result);
   } catch (error) {
     console.error('Error generating media:', error);
-    res.status(500).json({ error: 'Failed to generate media.' });
+    res.status(500).json({ error: 'Failed to generate media.', details: error.message, stack: String(error.stack) });
   }
 }
 
