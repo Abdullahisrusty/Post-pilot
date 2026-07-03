@@ -5,6 +5,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs-extra';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import * as googleTTS from 'google-tts-api';
 import { fileURLToPath } from 'url';
 import os from 'os';
 
@@ -51,28 +52,19 @@ export async function generateMediaHandler(req, res) {
     }
     
     if (type === 'voice' || type === 'video') {
-      // 2. Generate Voice using ElevenLabs
+      // 2. Generate Voice using Google TTS (100% Free)
       const textToSpeak = voiceText || prompt;
-      // Using a default voice ID (Rachel) - you can make this dynamic later
-      const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
       
-      const elRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY
-        },
-        body: JSON.stringify({
-          text: textToSpeak,
-          model_id: "eleven_turbo_v2_5",
-          voice_settings: { stability: 0.5, similarity_boost: 0.5 }
-        })
+      const audioUrl = googleTTS.getAudioUrl(textToSpeak, {
+        lang: 'en',
+        slow: false,
+        host: 'https://translate.google.com',
       });
       
+      const elRes = await fetch(audioUrl);
+      
       if (!elRes.ok) {
-        const errText = await elRes.text();
-        console.error("ElevenLabs Error:", errText);
-        throw new Error(`ElevenLabs API Error: ${errText}`);
+        throw new Error('Failed to download audio from Google TTS');
       }
       
       const audioBuffer = await elRes.buffer();
