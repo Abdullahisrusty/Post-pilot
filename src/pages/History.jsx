@@ -36,128 +36,7 @@ const PLATFORM_COLORS = {
   Reddit: 'var(--color-reddit)',
 };
 
-const historyItems = [
-  {
-    id: 1,
-    platform: 'LinkedIn',
-    publishedAt: '2 hours ago',
-    date: 'Jul 2, 2026',
-    preview: 'Just shipped our biggest feature update yet. After 3 months of heads-down building, PostPilot now supports...',
-    fullContent:
-      'Just shipped our biggest feature update yet. After 3 months of heads-down building, PostPilot now supports multi-platform scheduling, AI content generation, and deep analytics. The team pulled off something incredible, and I couldn\'t be more proud. Here\'s what we learned about shipping fast without breaking things...',
-    likes: 247,
-    comments: 42,
-    shares: 18,
-  },
-  {
-    id: 2,
-    platform: 'X',
-    publishedAt: '5 hours ago',
-    date: 'Jul 2, 2026',
-    preview: '🧵 Thread: 5 mistakes I made pricing my SaaS (and how I fixed them)...',
-    fullContent:
-      '🧵 Thread: 5 mistakes I made pricing my SaaS (and how I fixed them)\n\n1/ Pricing too low. We started at $9/mo thinking we\'d attract more users. Instead, we attracted the wrong users.\n\n2/ No annual plans. Monthly-only pricing killed our cash flow predictability.\n\n3/ Feature gating was wrong. We locked power features behind enterprise tier nobody could afford.\n\n4/ No free trial. Asking for credit card upfront reduced signups by 60%.\n\n5/ Not AB testing prices. We guessed instead of testing. Data > intuition.',
-    likes: 532,
-    comments: 89,
-    shares: 124,
-  },
-  {
-    id: 3,
-    platform: 'Instagram',
-    publishedAt: '1 day ago',
-    date: 'Jul 1, 2026',
-    preview: 'Monday morning at PostPilot HQ ☕ The energy in the office when you\'re building something you love...',
-    fullContent:
-      'Monday morning at PostPilot HQ ☕ The energy in the office when you\'re building something you love is unmatched. Today we\'re tackling our biggest roadmap item yet — real-time collaboration. Stay tuned for updates! #BuildInPublic #SaaS #StartupLife',
-    likes: 1243,
-    comments: 67,
-    shares: 34,
-  },
-  {
-    id: 4,
-    platform: 'Reddit',
-    publishedAt: '2 days ago',
-    date: 'Jun 30, 2026',
-    preview: '[Show HN] PostPilot — AI-powered social media copilot for founders and creators...',
-    fullContent:
-      '[Show HN] PostPilot — AI-powered social media copilot for founders and creators\n\nHey HN! After 6 months of building, I\'m launching PostPilot — a tool that uses AI to help you create, schedule, and analyze social media content across all platforms.\n\nKey features:\n- AI content generation tuned for each platform\n- Multi-platform scheduling\n- Analytics dashboard\n- Community engagement tracking\n\nWould love your feedback!',
-    likes: 189,
-    comments: 156,
-    shares: 23,
-  },
-  {
-    id: 5,
-    platform: 'LinkedIn',
-    publishedAt: '3 days ago',
-    date: 'Jun 29, 2026',
-    preview: 'Hot take: The best marketing strategy for early-stage startups isn\'t ads. It\'s building in public...',
-    fullContent:
-      'Hot take: The best marketing strategy for early-stage startups isn\'t ads. It\'s building in public.\n\nHere\'s why:\n1. You build trust through transparency\n2. Your journey becomes your content\n3. Early users feel like co-creators\n4. You get feedback before you ship\n5. It costs $0\n\nWe\'ve grown PostPilot to 2,000 users with zero ad spend. Everything came from sharing our journey authentically.',
-    likes: 892,
-    comments: 73,
-    shares: 56,
-  },
-  {
-    id: 6,
-    platform: 'X',
-    publishedAt: '5 days ago',
-    date: 'Jun 27, 2026',
-    preview: 'The "overnight success" of PostPilot: 6 months of 16-hour days, 847 commits, 3 pivots, and 1 near-death...',
-    fullContent:
-      'The "overnight success" of PostPilot:\n\n• 6 months of 16-hour days\n• 847 commits\n• 3 pivots\n• 1 near-death moment when AWS bill hit $8k\n• 200+ user interviews\n• 14 rejected VC meetings\n\nSuccess isn\'t overnight. It\'s every night.',
-    likes: 1847,
-    comments: 234,
-    shares: 312,
-  },
-  {
-    id: 7,
-    platform: 'Facebook',
-    publishedAt: '1 week ago',
-    date: 'Jun 25, 2026',
-    preview: 'Excited to announce PostPilot has been selected for the TechStars accelerator program! After months...',
-    fullContent:
-      'Excited to announce PostPilot has been selected for the TechStars accelerator program! After months of applications and interviews, we\'re thrilled to be joining the cohort. This is a massive opportunity to learn, grow, and scale. Thank you to everyone who supported us on this journey!',
-    likes: 456,
-    comments: 89,
-    shares: 67,
-  },
-  {
-    id: 8,
-    platform: 'LinkedIn',
-    publishedAt: '10 days ago',
-    date: 'Jun 22, 2026',
-    preview: 'I asked 100 content creators what their biggest pain point was. The answer surprised me...',
-    fullContent:
-      'I asked 100 content creators what their biggest pain point was.\n\nThe answer surprised me.\n\nIt wasn\'t algorithm changes. It wasn\'t monetization. It was consistency.\n\n78% said their #1 struggle was posting consistently across platforms.\n\nThat\'s exactly why we built PostPilot — to make consistency effortless.',
-    likes: 634,
-    comments: 45,
-    shares: 28,
-  },
-  {
-    id: 9,
-    platform: 'X',
-    publishedAt: '2 weeks ago',
-    date: 'Jun 18, 2026',
-    preview: 'We just crossed 1,000 users on PostPilot 🎉 From idea to 1K in 4 months. Here\'s exactly how we did it...',
-    fullContent:
-      'We just crossed 1,000 users on PostPilot 🎉\n\nFrom idea to 1K in 4 months. Here\'s exactly how we did it:\n\nMonth 1: Built MVP, got 50 beta users from Twitter\nMonth 2: Launched on Product Hunt, got 200 users\nMonth 3: Content marketing + partnerships = 500 users\nMonth 4: Word of mouth kicked in = 1,000 users\n\nNext stop: 10K 🚀',
-    likes: 2341,
-    comments: 178,
-    shares: 445,
-  },
-  {
-    id: 10,
-    platform: 'Instagram',
-    publishedAt: '3 weeks ago',
-    date: 'Jun 11, 2026',
-    preview: 'Team dinner to celebrate our first paying customer! 🥂 It\'s not about the $29 — it\'s about validation...',
-    fullContent:
-      'Team dinner to celebrate our first paying customer! 🥂\n\nIt\'s not about the $29 — it\'s about validation that someone believes in what we\'re building enough to pay for it.\n\nNever forget your first customer. Frame that receipt. Screenshot that notification. This is the moment everything changes. #StartupLife #FirstCustomer',
-    likes: 876,
-    comments: 54,
-    shares: 12,
-  },
-];
+
 
 const FILTER_OPTIONS = ['All', 'X', 'LinkedIn', 'Instagram', 'Facebook', 'Reddit'];
 
@@ -284,8 +163,8 @@ export default function History() {
       ) : filteredItems.length === 0 ? (
         <div className="history-empty card">
           <Clock size={48} className="history-empty-icon" />
-          <h3>No posts found</h3>
-          <p>Try adjusting your search or filter.</p>
+          <h3>No uploads yet</h3>
+          <p>You haven't published anything from PostPilot yet.</p>
         </div>
       ) : (
         <div className="history-timeline">
