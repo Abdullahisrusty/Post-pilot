@@ -128,12 +128,12 @@
 }
 
 .btn-connect {
-  background: #ffffff;
-  color: #000000;
+  background: #4b5563; /* matte gray */
+  color: #ffffff;
 }
 
 .btn-connect:hover {
-  background: #e5e5e5;
+  background: #374151; /* slightly darker matte gray on hover */
 }
 
 .btn-disconnect {
