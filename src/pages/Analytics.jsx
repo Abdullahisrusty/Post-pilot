@@ -71,43 +71,37 @@ function StatCard({ icon: Icon, iconColor, label, value, suffix, change, changeP
 const TIME_RANGES = ['7 Days', '30 Days', '90 Days'];
 
 const STATS = [
-  { icon: TrendingUp, iconColor: '#10b981', label: 'Posts Published', value: 147, change: '+12%', changePositive: true },
-  { icon: Heart, iconColor: '#ef4444', label: 'Total Engagement', value: 23400, suffix: true, change: '+8%', changePositive: true },
-  { icon: MessageSquare, iconColor: '#6366f1', label: 'Comments Replied', value: 89, change: '+15%', changePositive: true },
-  { icon: Sparkles, iconColor: '#8b5cf6', label: 'AI Content Generated', value: 312, change: '+22%', changePositive: true },
+  { icon: TrendingUp, iconColor: '#10b981', label: 'Posts Published', value: 0, change: '0%', changePositive: true },
+  { icon: Heart, iconColor: '#ef4444', label: 'Total Engagement', value: 0, suffix: true, change: '0%', changePositive: true },
+  { icon: MessageSquare, iconColor: '#6366f1', label: 'Comments Replied', value: 0, change: '0%', changePositive: true },
+  { icon: Sparkles, iconColor: '#8b5cf6', label: 'AI Content Generated', value: 0, change: '0%', changePositive: true },
 ];
 
 const ENGAGEMENT_DATA = [
-  { day: 'Mon', value: 320 },
-  { day: 'Tue', value: 480 },
-  { day: 'Wed', value: 390 },
-  { day: 'Thu', value: 620 },
-  { day: 'Fri', value: 540 },
-  { day: 'Sat', value: 710 },
-  { day: 'Sun', value: 450 },
+  { day: 'Mon', value: 0 },
+  { day: 'Tue', value: 0 },
+  { day: 'Wed', value: 0 },
+  { day: 'Thu', value: 0 },
+  { day: 'Fri', value: 0 },
+  { day: 'Sat', value: 0 },
+  { day: 'Sun', value: 0 },
 ];
 
 const PLATFORM_BREAKDOWN = [
-  { platform: 'LinkedIn', posts: 42, engagement: '10.5K', avgLikes: 248, growth: '+18%', positive: true, color: '#0a66c2', share: 45 },
-  { platform: 'X (Twitter)', posts: 58, engagement: '7.2K', avgLikes: 124, growth: '+12%', positive: true, color: '#ffffff', share: 31 },
-  { platform: 'Reddit', posts: 23, engagement: '3.1K', avgLikes: 135, growth: '+25%', positive: true, color: '#ff4500', share: 13 },
-  { platform: 'Instagram', posts: 15, engagement: '1.8K', avgLikes: 120, growth: '+5%', positive: true, color: '#e4405f', share: 8 },
-  { platform: 'Facebook', posts: 9, engagement: '800', avgLikes: 89, growth: '-3%', positive: false, color: '#1877f2', share: 3 },
+  { platform: 'LinkedIn', posts: 0, engagement: '0', avgLikes: 0, growth: '0%', positive: true, color: '#0a66c2', share: 0 },
+  { platform: 'X (Twitter)', posts: 0, engagement: '0', avgLikes: 0, growth: '0%', positive: true, color: '#ffffff', share: 0 },
+  { platform: 'Reddit', posts: 0, engagement: '0', avgLikes: 0, growth: '0%', positive: true, color: '#ff4500', share: 0 },
+  { platform: 'Instagram', posts: 0, engagement: '0', avgLikes: 0, growth: '0%', positive: true, color: '#e4405f', share: 0 },
+  { platform: 'Facebook', posts: 0, engagement: '0', avgLikes: 0, growth: '0%', positive: true, color: '#1877f2', share: 0 },
 ];
 
-const RECENT_ACTIVITY = [
-  { icon: Send, text: 'Published LinkedIn post — "5 SaaS Metrics Every Founder Should Track"', time: '2h ago', color: '#0a66c2' },
-  { icon: MessageSquare, text: 'Replied to 3 comments on your X thread', time: '4h ago', color: '#6366f1' },
-  { icon: PenTool, text: 'AI generated 5 content drafts for next week', time: '6h ago', color: '#8b5cf6' },
-  { icon: Eye, text: 'Reddit post hit 1.2K views in r/SaaS', time: '8h ago', color: '#ff4500' },
-  { icon: Zap, text: 'Engagement rate increased by 15% on LinkedIn', time: '12h ago', color: '#10b981' },
-];
+const RECENT_ACTIVITY = [];
 
 export default function Analytics() {
   const [activeRange, setActiveRange] = useState('7 Days');
   const [hoveredBar, setHoveredBar] = useState(null);
 
-  const maxEngagement = Math.max(...ENGAGEMENT_DATA.map((d) => d.value));
+  const maxEngagement = Math.max(...ENGAGEMENT_DATA.map((d) => d.value), 1);
 
   return (
     <div className="analytics-page">
@@ -249,7 +243,11 @@ export default function Analytics() {
       <div className="analytics-activity glass animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
         <h3 className="activity-title">Recent Activity</h3>
         <div className="activity-list">
-          {RECENT_ACTIVITY.map((item, i) => (
+          {RECENT_ACTIVITY.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              No recent activity yet.
+            </div>
+          ) : RECENT_ACTIVITY.map((item, i) => (
             <div
               key={i}
               className="activity-item animate-fadeInUp"

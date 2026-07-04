@@ -34,64 +34,7 @@ const PLATFORM_COLORS = {
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function getScheduledPosts(year, month) {
-  return [
-    {
-      id: 1,
-      day: 5,
-      title: 'Product launch announcement',
-      platforms: ['X', 'LinkedIn'],
-      time: '10:00 AM',
-      color: '#6366f1',
-    },
-    {
-      id: 2,
-      day: 8,
-      title: 'Behind the scenes reel',
-      platforms: ['Instagram'],
-      time: '2:00 PM',
-      color: '#e4405f',
-    },
-    {
-      id: 3,
-      day: 12,
-      title: 'Weekly tips thread',
-      platforms: ['X'],
-      time: '9:00 AM',
-      color: '#8b5cf6',
-    },
-    {
-      id: 4,
-      day: 15,
-      title: 'Industry insights',
-      platforms: ['LinkedIn', 'Facebook'],
-      time: '11:30 AM',
-      color: '#0a66c2',
-    },
-    {
-      id: 5,
-      day: 18,
-      title: 'Community Q&A',
-      platforms: ['Reddit'],
-      time: '3:00 PM',
-      color: '#ff4500',
-    },
-    {
-      id: 6,
-      day: 22,
-      title: 'Feature spotlight',
-      platforms: ['X', 'LinkedIn', 'Instagram', 'Facebook', 'Reddit'],
-      time: '12:00 PM',
-      color: '#10b981',
-    },
-    {
-      id: 7,
-      day: 28,
-      title: 'Month recap',
-      platforms: ['LinkedIn'],
-      time: '4:00 PM',
-      color: '#f59e0b',
-    },
-  ];
+  return [];
 }
 
 function getCalendarDays(year, month) {
