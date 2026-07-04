@@ -128,12 +128,12 @@
 }
 
 .btn-connect {
-  background: var(--primary-color);
-  color: white;
+  background: #ffffff;
+  color: #000000;
 }
 
 .btn-connect:hover {
-  background: var(--primary-hover);
+  background: #e5e5e5;
 }
 
 .btn-disconnect {

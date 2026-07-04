@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Send,
@@ -8,8 +9,7 @@ import {
   Flame,
   Briefcase,
   Smile,
-  
-  
+  AlertCircle,
   Hash,
   
   
@@ -117,7 +117,14 @@ const CARD_DEFS = [
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { addToast } = useToast();
+
+  const [connections, setConnections] = useState({});
+  useEffect(() => {
+    const saved = localStorage.getItem('postpilot_connections');
+    if (saved) setConnections(JSON.parse(saved));
+  }, []);
 
   /* ── Composer state ── */
   const [content, setContent] = useState('');
@@ -353,6 +360,30 @@ export default function Dashboard() {
               );
             })}
             </div>
+            
+            {/* Show alert if any selected platform is not connected */}
+            {selectedPlatforms.map(platformId => {
+              const platformName = PLATFORMS.find(p => p.id === platformId)?.label;
+              const isConnected = platformId === 'x' ? connections.twitter : connections[platformId];
+              
+              if (!isConnected) {
+                return (
+                  <div key={`alert-${platformId}`} className="unlinked-alert" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', padding: '8px 12px', background: 'var(--bg-glass)', border: '1px solid var(--border-light)', borderRadius: '8px', fontSize: '13px' }}>
+                    <AlertCircle size={14} color="#f59e0b" />
+                    <span style={{ color: 'var(--text-secondary)' }}>
+                      <strong>{platformName}</strong> is not linked.
+                    </span>
+                    <button 
+                      onClick={() => navigate('/app/integrations')} 
+                      style={{ marginLeft: 'auto', background: 'transparent', border: '1px solid var(--border-light)', color: 'var(--text-primary)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                    >
+                      Link Now
+                    </button>
+                  </div>
+                );
+              }
+              return null;
+            })}
           </div>
         )}
 

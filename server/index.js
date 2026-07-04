@@ -5,6 +5,7 @@ import Groq from 'groq-sdk';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateMediaHandler, serveMediaHandler } from './media.js';
+import authRouter from './auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,9 @@ Return ONLY valid JSON. Do not include markdown formatting like \`\`\`json.`;
     res.status(500).json({ error: 'Failed to generate content.' });
   }
 });
+
+// Auth Routes
+app.use('/api/auth', authRouter);
 
 // New Media Generation Routes
 app.post('/api/generate-media', generateMediaHandler);

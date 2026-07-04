@@ -83,16 +83,46 @@ Return valid JSON exactly in this format:
         const imageBuffer = await imageRes.buffer();
         const imagePath = path.join(tempDir, 'image.jpg');
         await fs.writeFile(imagePath, imageBuffer);
+        // Generate Veed-style SRT captions
+        const words = textToSpeak.split(' ');
+        let srtContent = '';
+        let currentTimeMs = 0;
+        let index = 1;
+        
+        for (let i = 0; i < words.length; i += 4) {
+          const chunk = words.slice(i, i + 4).join(' ');
+          const durationMs = Math.max(800, (chunk.length / 5) * 350); // min 800ms per chunk
+          
+          const formatTime = (ms) => {
+            const d = new Date(ms);
+            return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')},${String(d.getUTCMilliseconds()).padStart(3, '0')}`;
+          };
+          
+          const startTime = formatTime(currentTimeMs);
+          currentTimeMs += durationMs;
+          const endTime = formatTime(currentTimeMs);
+          
+          // Using SubRip markup for basic styling
+          srtContent += `${index}\n${startTime} --> ${endTime}\n<font color="white"><b>${chunk}</b></font>\n\n`;
+          index++;
+        }
+        
+        const srtPath = path.join(tempDir, 'captions.srt');
+        await fs.writeFile(srtPath, srtContent);
+        
+        // Escape Windows path for FFmpeg filter
+        const escapedSrtPath = srtPath.replace(/\\/g, '/').replace(':', '\\:');
         
         const videoPath = path.join(tempDir, 'video.mp4');
-        
+
         await new Promise((resolve, reject) => {
           ffmpeg()
             .input(imagePath)
             .loop(1)
             .input(audioPath)
             .complexFilter([
-              "zoompan=z='min(zoom+0.0015,1.5)':d=700:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
+              // Zoompan for motion, then subtitle overlay
+              `zoompan=z='min(zoom+0.0015,1.5)':d=700:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'[v1];[v1]subtitles='${escapedSrtPath}':force_style='Fontsize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H40000000,BorderStyle=3,Outline=2,Shadow=1,MarginV=60'`
             ])
             .outputOptions([
               '-c:v libx264',

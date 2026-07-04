@@ -1,23 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Link2, 
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import { FaTwitter, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa';
+import { FaTwitter, FaLinkedin, FaInstagram, FaFacebook, FaReddit } from 'react-icons/fa';
+import { useToast } from '../context/ToastContext';
 import './Integrations.css';
 
 export default function Integrations() {
-  const [connections, setConnections] = useState({
-    twitter: false,
-    linkedin: false,
-    instagram: false,
-    facebook: false
+  const { addToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [connections, setConnections] = useState(() => {
+    const saved = localStorage.getItem('postpilot_connections');
+    if (saved) return JSON.parse(saved);
+    return {
+      twitter: false,
+      linkedin: false,
+      reddit: false,
+      instagram: false,
+      facebook: false
+    };
   });
 
-  const handleConnect = (platform) => {
-    // In a real app, this would redirect to an OAuth provider
-    alert(`Connecting to ${platform} requires setting up Developer API keys in the backend.\n\nFor now, this button is a UI placeholder while you apply for Developer Access at ${platform}.`);
+  useEffect(() => {
+    localStorage.setItem('postpilot_connections', JSON.stringify(connections));
+  }, [connections]);
+
+  useEffect(() => {
+    const oauthSuccess = searchParams.get('oauth_success');
+    const platform = searchParams.get('platform');
+    const simulated = searchParams.get('simulated');
+    
+    if (oauthSuccess === 'true' && platform) {
+      setConnections(prev => ({ ...prev, [platform]: true }));
+      addToast(`Successfully connected to ${platform}! ${simulated ? '(Simulation Mode)' : ''}`, 'success');
+      
+      searchParams.delete('oauth_success');
+      searchParams.delete('platform');
+      searchParams.delete('simulated');
+      setSearchParams(searchParams, { replace: true });
+    } else if (oauthSuccess === 'false' && platform) {
+      addToast(`Failed to connect to ${platform}.`, 'danger');
+      searchParams.delete('oauth_success');
+      searchParams.delete('platform');
+      searchParams.delete('error');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, addToast]);
+
+  const handleConnect = (platformId, platformName) => {
+    if (connections[platformId]) {
+      // Disconnect
+      setConnections(prev => ({ ...prev, [platformId]: false }));
+      addToast(`Disconnected from ${platformName}`, 'info');
+    } else {
+      // Redirect to real OAuth flow
+      window.location.href = `/api/auth/${platformId}/login`;
+    }
   };
 
   const platforms = [
@@ -34,6 +75,13 @@ export default function Integrations() {
       icon: <FaLinkedin size={24} color="#0A66C2" />,
       description: 'Share professional updates and articles to your LinkedIn network.',
       connected: connections.linkedin
+    },
+    {
+      id: 'reddit',
+      name: 'Reddit',
+      icon: <FaReddit size={24} color="#FF4500" />,
+      description: 'Post to relevant subreddits and manage comments efficiently.',
+      connected: connections.reddit
     },
     {
       id: 'instagram',
@@ -56,14 +104,6 @@ export default function Integrations() {
       <div className="integrations-header">
         <h1>Social Integrations</h1>
         <p>Connect your social media accounts to enable AI scheduling and automatic posting.</p>
-        
-        <div className="integrations-alert">
-          <AlertCircle size={20} color="#f59e0b" />
-          <span>
-            <strong>Developer Access Required:</strong> To fully connect these accounts, you must register PostPilot in each platform's Developer Portal (e.g., Meta App Dashboard, Twitter Developer). 
-            Once approved, we will securely link the OAuth keys.
-          </span>
-        </div>
       </div>
 
       <div className="integrations-grid">
@@ -91,7 +131,7 @@ export default function Integrations() {
             
             <button 
               className={`integration-btn ${platform.connected ? 'btn-disconnect' : 'btn-connect'}`}
-              onClick={() => handleConnect(platform.name)}
+              onClick={() => handleConnect(platform.id, platform.name)}
             >
               {platform.connected ? 'Disconnect' : (
                 <>
