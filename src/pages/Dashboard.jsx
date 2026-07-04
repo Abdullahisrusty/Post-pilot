@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import {
   Sparkles,
   Send,
@@ -119,6 +120,7 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 export default function Dashboard() {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { userId } = useAuth();
 
   const [connections, setConnections] = useState({});
   useEffect(() => {
@@ -268,13 +270,40 @@ export default function Dashboard() {
   }, [scheduleDate, scheduleTime, addToast]);
 
   /* ── Publish ── */
-  const handlePublish = useCallback(() => {
-    if (!content.trim()) {
-      addToast('Nothing to publish — write something first!', 'warning');
+  const handlePublish = useCallback(async () => {
+    if (cards.length === 0) {
+      addToast('Generate some content first before publishing!', 'warning');
       return;
     }
-    addToast('Post published successfully!', 'success');
-  }, [content, addToast]);
+
+    try {
+      const payload = {
+        userId: userId || 'default_user',
+        // In a real app, you might publish different content to different platforms.
+        // For MVP, we send the content of the first generated card or a combined text,
+        // or we change the backend to accept an array of { platform, text }.
+        // Let's change backend later if needed. For now, we'll just send the first card's body
+        // or a combined text. Actually, let's just send the X post if X is selected.
+        content: cards.find(c => c.platform === 'X (Twitter)')?.body || cards[0].body,
+        platforms: selectedPlatforms,
+      };
+
+      const res = await fetch('/api/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        addToast('Post published successfully!', 'success');
+      } else {
+        addToast(data.error || 'Failed to publish.', 'danger');
+      }
+    } catch (err) {
+      addToast('Error publishing post.', 'danger');
+    }
+  }, [cards, selectedPlatforms, userId, addToast]);
 
   /* ──────── Skeleton cards ──────── */
   const renderSkeletons = () =>

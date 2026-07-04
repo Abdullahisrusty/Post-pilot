@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import {
   Clock,
   Search,
@@ -162,10 +163,30 @@ const FILTER_OPTIONS = ['All', 'X', 'LinkedIn', 'Instagram', 'Facebook', 'Reddit
 
 export default function History() {
   const { addToast } = useToast();
+  const { userId } = useAuth();
+  const [historyItems, setHistoryItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [platformFilter, setPlatformFilter] = useState('All');
   const [showFilter, setShowFilter] = useState(false);
   const [expandedIds, setExpandedIds] = useState(new Set());
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch(`/api/history?userId=${userId || 'default_user'}`);
+        if (res.ok) {
+          const data = await res.json();
+          setHistoryItems(data);
+        }
+      } catch (err) {
+        console.error('Failed to load history', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [userId]);
 
   const filteredItems = useMemo(() => {
     return historyItems.filter((item) => {
@@ -256,7 +277,11 @@ export default function History() {
         </div>
       </div>
 
-      {filteredItems.length === 0 ? (
+      {isLoading ? (
+        <div className="history-empty card">
+          <h3>Loading your posts...</h3>
+        </div>
+      ) : filteredItems.length === 0 ? (
         <div className="history-empty card">
           <Clock size={48} className="history-empty-icon" />
           <h3>No posts found</h3>

@@ -1,10 +1,14 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import { TwitterApi } from 'twitter-api-v2';
+import { saveToken } from './db.js';
 
 dotenv.config();
 
 const router = express.Router();
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Simple in-memory session store for OAuth state & PKCE codeVerifier
+const oauthSessions = new Map();
 
 /**
  * Helper to check if developer has configured API keys for a platform
@@ -14,64 +18,52 @@ const hasApiKeys = (platform) => {
   return !!process.env[`${envPrefix}_CLIENT_ID`] && !!process.env[`${envPrefix}_CLIENT_SECRET`];
 };
 
-/**
- * Route 1: Initiates the OAuth flow
- * User clicks "Connect" on frontend, frontend redirects here.
- */
 router.get('/:platform/login', (req, res) => {
   const { platform } = req.params;
+  const { userId } = req.query;
   
-  if (!hasApiKeys(platform)) {
-    // ---------------------------------------------------------
-    // SIMULATION MODE
-    // If keys are missing, simulate an OAuth handshake instead of breaking.
-    // ---------------------------------------------------------
-    console.log(`[OAuth Simulation] Keys missing for ${platform}. Triggering mock redirect.`);
-    
-    // Simulate the time it takes to redirect to twitter.com and back
-    return res.redirect(`${FRONTEND_URL}/app/integrations?oauth_success=true&platform=${platform}&simulated=true`);
+  if (!userId) {
+    return res.status(400).send('Missing userId');
   }
 
-  // ---------------------------------------------------------
-  // REAL OAUTH MODE
-  // Construct the real authorization URL based on the platform
-  // ---------------------------------------------------------
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.get('host');
   const baseUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
+  const frontendUrl = process.env.FRONTEND_URL || (host.includes('localhost') ? 'http://localhost:5173' : baseUrl);
+  
+  if (!hasApiKeys(platform)) {
+    console.log(`[OAuth Simulation] Keys missing for ${platform}. Triggering mock redirect.`);
+    return res.redirect(`${frontendUrl}/app/integrations?oauth_success=true&platform=${platform}&simulated=true`);
+  }
+
   const clientId = process.env[`${platform.toUpperCase()}_CLIENT_ID`];
-  const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/${platform}/callback`);
+  const clientSecret = process.env[`${platform.toUpperCase()}_CLIENT_SECRET`];
+  const redirectUri = `${baseUrl}/api/auth/${platform}/callback`;
   
+  if (platform.toLowerCase() === 'twitter') {
+    const client = new TwitterApi({ clientId, clientSecret });
+    const { url, codeVerifier, state } = client.generateOAuth2AuthLink(redirectUri, { scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'] });
+    
+    // Store session info (expires in 10 mins)
+    oauthSessions.set(state, { codeVerifier, userId, platform, redirectUri });
+    setTimeout(() => oauthSessions.delete(state), 10 * 60 * 1000);
+    
+    return res.redirect(url);
+  }
+  
+  // Fallback for other platforms (simplified)
   let authUrl = '';
-  
   switch (platform.toLowerCase()) {
-    case 'twitter':
-      authUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=tweet.read%20tweet.write%20users.read&state=state&code_challenge=challenge&code_challenge_method=plain`;
-      break;
     case 'linkedin':
-      authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=state&scope=r_liteprofile%20w_member_social`;
-      break;
-    case 'reddit':
-      authUrl = `https://www.reddit.com/api/v1/authorize?client_id=${clientId}&response_type=code&state=state&redirect_uri=${redirectUri}&duration=permanent&scope=identity%20submit`;
-      break;
-    case 'instagram':
-      authUrl = `https://api.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code`;
-      break;
-    case 'facebook':
-      authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=state`;
+      authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&state=state&scope=r_liteprofile%20w_member_social`;
       break;
     default:
       return res.status(400).json({ error: 'Unsupported platform' });
   }
 
-  // Redirect the user to the actual platform's login page
   res.redirect(authUrl);
 });
 
-/**
- * Route 2: OAuth Callback
- * The platform redirects the user back here with an authorization code.
- */
 router.get('/:platform/callback', async (req, res) => {
   const { platform } = req.params;
   const { code, state, error } = req.query;
@@ -88,21 +80,41 @@ router.get('/:platform/callback', async (req, res) => {
     return res.status(400).send('Authorization code missing');
   }
 
-  try {
-    // ---------------------------------------------------------
-    // Here is where you will exchange the `code` for an `access_token`
-    // using fetch() or axios to the platform's token endpoint.
-    // e.g. const token = await exchangeCodeForToken(platform, code);
-    // ---------------------------------------------------------
-    
-    console.log(`Received OAuth code from ${platform}: ${code.substring(0, 10)}...`);
-    
-    // For now, redirect back to frontend with success
-    res.redirect(`${redirectBase}/app/integrations?oauth_success=true&platform=${platform}`);
-  } catch (err) {
-    console.error('Error exchanging token:', err);
-    res.redirect(`${redirectBase}/app/integrations?oauth_success=false&platform=${platform}`);
+  if (platform.toLowerCase() === 'twitter') {
+    const session = oauthSessions.get(state);
+    if (!session) {
+      console.error('Session expired or invalid state for Twitter OAuth');
+      return res.redirect(`${redirectBase}/app/integrations?oauth_success=false&platform=${platform}&error=session_expired`);
+    }
+
+    try {
+      const clientId = process.env.TWITTER_CLIENT_ID;
+      const clientSecret = process.env.TWITTER_CLIENT_SECRET;
+      
+      // Instantiate a client to exchange the code
+      const client = new TwitterApi({ clientId, clientSecret });
+      
+      const { accessToken, refreshToken, expiresIn } = await client.loginWithOAuth2({
+        code,
+        codeVerifier: session.codeVerifier,
+        redirectUri: session.redirectUri,
+      });
+
+      // Save tokens to DB
+      await saveToken(session.userId, 'twitter', { accessToken, refreshToken, expiresIn, updated_at: Date.now() });
+      
+      console.log(`Successfully authenticated Twitter for user ${session.userId}`);
+      oauthSessions.delete(state);
+      
+      return res.redirect(`${redirectBase}/app/integrations?oauth_success=true&platform=${platform}`);
+    } catch (err) {
+      console.error('Error exchanging Twitter token:', err);
+      return res.redirect(`${redirectBase}/app/integrations?oauth_success=false&platform=${platform}`);
+    }
   }
+
+  // Fallback for other platforms
+  res.redirect(`${redirectBase}/app/integrations?oauth_success=true&platform=${platform}&simulated=true`);
 });
 
 export default router;

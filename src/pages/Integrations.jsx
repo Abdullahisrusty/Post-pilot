@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 import { 
   Link2, 
   CheckCircle2,
@@ -12,6 +13,7 @@ import './Integrations.css';
 export default function Integrations() {
   const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { userId } = useAuth();
   const [connections, setConnections] = useState(() => {
     const saved = localStorage.getItem('postpilot_connections');
     if (saved) return JSON.parse(saved);
@@ -57,7 +59,7 @@ export default function Integrations() {
       addToast(`Disconnected from ${platformName}`, 'info');
     } else {
       // Redirect to real OAuth flow
-      window.location.href = `/api/auth/${platformId}/login`;
+      window.location.href = `/api/auth/${platformId}/login?userId=${userId || 'default_user'}`;
     }
   };
 

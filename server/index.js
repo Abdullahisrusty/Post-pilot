@@ -6,6 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateMediaHandler, serveMediaHandler } from './media.js';
 import authRouter from './auth.js';
+import publishRouter from './publish.js';
+import { getPosts } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +87,16 @@ Return ONLY valid JSON. Do not include markdown formatting like \`\`\`json.`;
 
 // Auth Routes
 app.use('/api/auth', authRouter);
+
+// Publish Route
+app.use('/api/publish', publishRouter);
+
+// History Route
+app.get('/api/history', async (req, res) => {
+  const { userId } = req.query;
+  const posts = await getPosts(userId);
+  res.json(posts);
+});
 
 // New Media Generation Routes
 app.post('/api/generate-media', generateMediaHandler);
