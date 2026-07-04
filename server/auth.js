@@ -41,8 +41,13 @@ router.get('/:platform/login', (req, res) => {
   const redirectUri = `${baseUrl}/api/auth/${platform}/callback`;
   
   if (platform.toLowerCase() === 'twitter') {
+    console.log(`[DEBUG] Using Client ID: ${clientId}`);
+    console.log(`[DEBUG] Sending Redirect URI: ${redirectUri}`);
+    
     const client = new TwitterApi({ clientId, clientSecret });
     const { url, codeVerifier, state } = client.generateOAuth2AuthLink(redirectUri, { scope: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'] });
+    
+    console.log(`[DEBUG] Final generated URL: ${url}`);
     
     // Store session info (expires in 10 mins)
     oauthSessions.set(state, { codeVerifier, userId, platform, redirectUri });
