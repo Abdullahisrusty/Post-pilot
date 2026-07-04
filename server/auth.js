@@ -109,7 +109,7 @@ router.get('/:platform/callback', async (req, res) => {
       return res.redirect(`${redirectBase}/app/integrations?oauth_success=true&platform=${platform}`);
     } catch (err) {
       console.error('Error exchanging Twitter token:', err);
-      return res.redirect(`${redirectBase}/app/integrations?oauth_success=false&platform=${platform}`);
+      return res.redirect(`${redirectBase}/app/integrations?oauth_success=false&platform=${platform}&error=${encodeURIComponent(err.message || 'Unknown error')}`);
     }
   }
 

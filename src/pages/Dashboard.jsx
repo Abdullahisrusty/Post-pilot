@@ -296,7 +296,13 @@ export default function Dashboard() {
       const data = await res.json();
       
       if (data.success) {
-        addToast('Post published successfully!', 'success');
+        const hasErrors = data.results?.some(r => r.status === 'error');
+        if (hasErrors) {
+          const errors = data.results.filter(r => r.status === 'error').map(r => r.error).join(', ');
+          addToast(`Failed to publish: ${errors}`, 'danger');
+        } else {
+          addToast('Post published successfully!', 'success');
+        }
       } else {
         addToast(data.error || 'Failed to publish.', 'danger');
       }
