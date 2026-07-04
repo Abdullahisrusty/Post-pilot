@@ -35,68 +35,7 @@ const PLATFORM_COLORS = {
   Reddit: 'var(--color-reddit)',
 };
 
-const initialDrafts = [
-  {
-    id: 1,
-    title: '10 Things I Learned Building a SaaS in 2024',
-    content:
-      'Building a SaaS product from scratch has been one of the most rewarding yet challenging experiences of my career. Here are the top 10 lessons I wish I knew before starting...',
-    platforms: ['X', 'LinkedIn'],
-    status: 'Draft',
-    editedAgo: '2h ago',
-    wordCount: 342,
-  },
-  {
-    id: 2,
-    title: 'Why Every Founder Should Learn to Code',
-    content:
-      'As a non-technical founder who taught myself to code, I can confidently say it was the best investment I made. Here\'s why understanding code gives you a massive edge...',
-    platforms: ['LinkedIn', 'Reddit'],
-    status: 'Draft',
-    editedAgo: '5h ago',
-    wordCount: 528,
-  },
-  {
-    id: 3,
-    title: 'Product Hunt Launch Checklist',
-    content:
-      'After launching 3 products on Product Hunt and hitting the top 5 twice, I created the ultimate checklist. Save this for your next launch day...',
-    platforms: ['X', 'LinkedIn', 'Facebook'],
-    status: 'Scheduled',
-    editedAgo: '1d ago',
-    wordCount: 456,
-  },
-  {
-    id: 4,
-    title: 'The Future of AI in Content Creation',
-    content:
-      'AI isn\'t replacing content creators — it\'s giving them superpowers. Here\'s how I see the landscape evolving over the next 5 years and why human creativity still matters...',
-    platforms: ['X', 'LinkedIn', 'Instagram', 'Facebook', 'Reddit'],
-    status: 'Review',
-    editedAgo: '2d ago',
-    wordCount: 712,
-  },
-  {
-    id: 5,
-    title: 'Weekly Productivity Tips Thread',
-    content:
-      '🧵 Thread: 7 productivity tips that actually work (backed by science, not hustle culture). Tip #1: Time blocking isn\'t about rigidity — it\'s about intention...',
-    platforms: ['X'],
-    status: 'Draft',
-    editedAgo: '3d ago',
-    wordCount: 280,
-  },
-  {
-    id: 6,
-    title: 'Behind the Scenes: Building PostPilot',
-    content:
-      'Take a peek behind the curtain! Here\'s what our typical week looks like at PostPilot — from Monday standups to Friday deploys. The journey of building in public...',
-    platforms: ['Instagram', 'Facebook'],
-    status: 'Draft',
-    editedAgo: '4d ago',
-    wordCount: 394,
-  },
-];
+const initialDrafts = [];
 
 const STATUS_BADGE = {
   Draft: 'badge-neutral',
