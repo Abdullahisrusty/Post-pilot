@@ -610,27 +610,53 @@ export default function Dashboard() {
         {!generating && mediaItems.length > 0 && (
           <div className="gen-grid">
             {mediaItems.map((media) => (
-              <div key={media.id} className="gen-card glass animate-fadeInUp" style={{ padding: '24px' }}>
+              <div key={media.id} className="gen-card glass animate-fadeInUp" style={{ gridColumn: 'span 2', padding: '24px' }}>
                 <div className="gen-card-header" style={{ marginBottom: '16px' }}>
                   <span className="gen-card-title">AI Generated {media.type.toUpperCase()}</span>
                 </div>
-                {media.imageUrl && (
-                  <img src={media.imageUrl} alt="Generated" style={{ width: '100%', borderRadius: '12px', marginBottom: '16px' }} />
+                {media.script && (
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px', fontStyle: 'italic', lineHeight: 1.6 }}>{media.script}</p>
+                )}
+                {media.imageUrls && media.imageUrls.length > 0 && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+                    {media.imageUrls.map((url, i) => (
+                      <div key={i} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => window.open(url, '_blank')}>
+                        <img src={url} alt={`Option ${i+1}`} style={{ width: '100%', borderRadius: '10px', border: '2px solid var(--border-light)' }} />
+                        <span style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: '11px', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>Option {i+1}</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
                 {media.audioUrl && (
-                  <audio controls style={{ width: '100%', marginBottom: '16px' }}>
-                    <source src={media.audioUrl} type="audio/mpeg" />
-                  </audio>
+                  <div style={{ marginBottom: '16px' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Voiceover</p>
+                    <audio controls style={{ width: '100%' }}>
+                      <source src={media.audioUrl} type="audio/mpeg" />
+                    </audio>
+                  </div>
                 )}
                 {media.videoUrl && (
-                  <video controls style={{ width: '100%', borderRadius: '12px' }}>
-                    <source src={media.videoUrl} type="video/mp4" />
-                  </video>
+                  <div style={{ marginBottom: '16px' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>Video Ad</p>
+                    <video controls style={{ width: '100%', borderRadius: '12px' }}>
+                      <source src={media.videoUrl} type="video/mp4" />
+                    </video>
+                  </div>
                 )}
                 <div className="gen-card-actions">
-                  {(media.imageUrl || media.audioUrl || media.videoUrl) && (
-                    <button className="btn btn-secondary btn-sm" onClick={() => window.open(media.videoUrl || media.audioUrl || media.imageUrl, '_blank')}>
-                      <Copy size={14} /> Download Asset
+                  {media.videoUrl && (
+                    <button className="btn btn-secondary btn-sm" onClick={() => window.open(media.videoUrl, '_blank')}>
+                      <Copy size={14} /> Download Video
+                    </button>
+                  )}
+                  {media.audioUrl && (
+                    <button className="btn btn-secondary btn-sm" onClick={() => window.open(media.audioUrl, '_blank')}>
+                      <Copy size={14} /> Download Audio
+                    </button>
+                  )}
+                  {media.imageUrls && media.imageUrls[0] && (
+                    <button className="btn btn-secondary btn-sm" onClick={() => window.open(media.imageUrls[0], '_blank')}>
+                      <Copy size={14} /> Download Image
                     </button>
                   )}
                 </div>
